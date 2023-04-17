@@ -264,7 +264,7 @@ public class MoviesController : ControllerBase
     }
 
 
-  [HttpPost("GetSimilarMoviesToHighestRatedMovieByUser")]
+    [HttpPost("GetSimilarMoviesToHighestRatedMovieByUser")]   
     public ActionResult<List<string>> GetSimilarMoviesToHighestRatedMovieByUser(int userID)
     {
         // Get the movie that received the highest rating from the user
@@ -273,21 +273,28 @@ public class MoviesController : ControllerBase
 
         Console.WriteLine($"highestRatedMovie: {highestRatedMovie}");
         Console.WriteLine($"highestRatedMovieId: {highestRatedMovieId}");
-    
+
         if (highestRatedMovie == null)
         {
             return NotFound();
         }
 
-       // TODO
-       // Рекомендации, на данный момент мы имеем id фильма 
-       // получившего наивысшую оценку пользователя с заданным идентификатором.
-       // Теперь с помощью двух методов GetSimilarMovies и CompareMoviesByGenresVector,
-       // нужно придумать как вернуть спискок на фильмов, похожий на фильм,
-       // получивший наивысшую оценку пользователя с заданным идентификатором. 
+        // Get similar movies to the highest rated movie
+        var similarMovies = GetSimilarMovies(highestRatedMovieId, 0.5).Value.ToList();
 
-        return NotFound();
+        // Filter the list of similar movies based on cosine similarity
+        var filteredMovies = new List<string>();
+        foreach (var movie in similarMovies)
+        {
+            var movieId = GetMoviesByName(movie).FirstOrDefault().MovieID;
+            var cosineSimilarity = CompareMoviesByGenresVector(highestRatedMovieId, movieId).Value;
+            if (cosineSimilarity >= 0.5)
+            {
+                filteredMovies.Add(movie);
+            }
+        }
 
+        return filteredMovies;
     }
 
 }
