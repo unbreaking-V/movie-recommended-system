@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "TJ/1TP89t+1H2B4t2fiNV+q4f318NoJPFNOnGvr6CUBx6rDd2MYCZ6i01s9bH856zhfJTgknAUV5TRoIV9wiPw==",
+  "dgSpecHash": "/iBBVcae1tY1kLH8P9m0n1K8eXsLQKs3SPHCzUd7VlhNcW+ZqF7G5iVyVrSH5SkN7VhZsgsqLhgg0T2CQDzSqQ==",
   "success": true,
-  "projectFilePath": "/home/wladyka/Documents/PP/VI_semestr/AIA/lab2/lab2.csproj",
+  "projectFilePath": "/home/wladyka/Documents/PP/VI_semestr/AIA/movie-recommended-system/lab2.csproj",
   "expectedPackageFiles": [
     "/home/wladyka/.nuget/packages/google.protobuf/3.21.9/google.protobuf.3.21.9.nupkg.sha512",
     "/home/wladyka/.nuget/packages/k4os.compression.lz4/1.2.6/k4os.compression.lz4.1.2.6.nupkg.sha512",

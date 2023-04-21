@@ -235,7 +235,7 @@ public class MoviesController : ControllerBase
     }
 
     [HttpPost("GetRatedMoviesByUserId")]
-    public ActionResult<List<string>> GetRatedMoviesByUserId(int UserID)
+    public List<string> GetRatedMoviesByUserId(int UserID)
     {
             using (MoviesContext dbContext = new MoviesContext())
         {
@@ -264,23 +264,16 @@ public class MoviesController : ControllerBase
     }
 
 
-    [HttpPost("GetSimilarMoviesToHighestRatedMovieByUser")]   
-    public ActionResult<List<string>> GetSimilarMoviesToHighestRatedMovieByUser(int userID)
+      [HttpPost("GetSimilarMoviesToHighestRatedMovieByUser")]   
+    public List<string> GetSimilarMoviesToHighestRatedMovieByUser(int userID)
     {
         // Get the movie that received the highest rating from the user
         var highestRatedMovie = GetRatedMoviesByUserIdSortedByRating(userID).FirstOrDefault();
         var highestRatedMovieId = GetMoviesByName(highestRatedMovie).FirstOrDefault().MovieID;
 
-        Console.WriteLine($"highestRatedMovie: {highestRatedMovie}");
-        Console.WriteLine($"highestRatedMovieId: {highestRatedMovieId}");
-
-        if (highestRatedMovie == null)
-        {
-            return NotFound();
-        }
 
         // Get similar movies to the highest rated movie
-        var similarMovies = GetSimilarMovies(highestRatedMovieId, 0.5).Value.ToList();
+        var similarMovies = GetSimilarMovies(highestRatedMovieId, 0.7).Value.ToList();
 
         // Filter the list of similar movies based on cosine similarity
         var filteredMovies = new List<string>();
@@ -288,7 +281,7 @@ public class MoviesController : ControllerBase
         {
             var movieId = GetMoviesByName(movie).FirstOrDefault().MovieID;
             var cosineSimilarity = CompareMoviesByGenresVector(highestRatedMovieId, movieId).Value;
-            if (cosineSimilarity >= 0.5)
+            if (cosineSimilarity >= 0.7)
             {
                 filteredMovies.Add(movie);
             }
@@ -297,4 +290,77 @@ public class MoviesController : ControllerBase
         return filteredMovies;
     }
 
+    [HttpPost("GetRecommendationsForUserById")]   
+    public List<string> GetRecommendationsForUserById(int userID,int size)
+    {
+        var recommendedMovies = GetSimilarMoviesToHighestRatedMovieByUser(userID);
+        return recommendedMovies.Take(size).ToList();
+
+    }
+
+    [Microsoft.AspNetCore.Mvc.HttpGet]
+    public List<Tuple<int, int>> GetMovieIdWithRating(int userID)
+        {
+           using (MoviesContext dbContext = new MoviesContext()){
+            var userRating = dbContext.Ratings    
+            .Where(r => r.RatingUser.UserID == userID)
+            .Select(r => new Tuple<int, int>(r.RatedMovie.MovieID, r.RatingValue))
+            .ToList();
+        
+        return userRating ;
+            }
+        }
+    
+    [HttpPost("GetRecommendedMoviesForUser")]
+    public ActionResult<List<string>> GetRecommendedMoviesForUser(int userID)
+    {    
+        
+        var userInfo = GetMovieIdWithRating(userID);
+        MoviesContext dbContext = new MoviesContext();
+        var listOfSimilarUsers = new List<string>();
+        var rated_movie = GetRatedMoviesByUserId(userID);
+
+        var similarUsers = new List<string>();
+        foreach (var user in dbContext.Users)
+        {
+            if (user.UserID == userID)
+            {
+                continue;
+            } 
+
+            var anotherMovie = GetMovieIdWithRating(user.UserID);
+
+            var sameMovieUser1 = new List<Tuple<int,int>>();
+            var sameMovieUser2 = new List<Tuple<int,int>>();
+            foreach (Tuple<int, int> rating1 in userInfo){    
+                foreach (Tuple<int, int> rating2 in anotherMovie){
+                    if (rating1.Item1 == rating2.Item1){
+                        sameMovieUser1.Add(rating1);
+                        sameMovieUser2.Add(rating2);
+                    }
+                }
+            }
+        
+            double good = 1;
+            double bad = 1;
+             for (int i = 0; i < sameMovieUser1.Count; i++) {
+                int diff = Math.Abs(sameMovieUser1[i].Item2 - sameMovieUser2[i].Item2);
+                if (diff == 1 || diff == -1) {
+                    good++;
+                } else {
+                    bad++;
+                }
+        }
+            if ((good/(good+bad)) >= 0.5){
+                var best_recomeded_movie = GetRatedMoviesByUserIdSortedByRating(user.UserID).FirstOrDefault();
+                if (!rated_movie.Contains(best_recomeded_movie)){
+                    listOfSimilarUsers.Add(best_recomeded_movie);
+                }
+
+            }
+        }
+        
+        return listOfSimilarUsers.Union(listOfSimilarUsers).ToList();
+    } 
 }
+

@@ -2581,11 +2581,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/home/wladyka/Documents/PP/VI_semestr/AIA/lab2/lab2.csproj",
+      "projectUniqueName": "/home/wladyka/Documents/PP/VI_semestr/AIA/movie-recommended-system/lab2.csproj",
       "projectName": "lab2",
-      "projectPath": "/home/wladyka/Documents/PP/VI_semestr/AIA/lab2/lab2.csproj",
+      "projectPath": "/home/wladyka/Documents/PP/VI_semestr/AIA/movie-recommended-system/lab2.csproj",
       "packagesPath": "/home/wladyka/.nuget/packages/",
-      "outputPath": "/home/wladyka/Documents/PP/VI_semestr/AIA/lab2/obj/",
+      "outputPath": "/home/wladyka/Documents/PP/VI_semestr/AIA/movie-recommended-system/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "/home/wladyka/.nuget/NuGet/NuGet.Config"
