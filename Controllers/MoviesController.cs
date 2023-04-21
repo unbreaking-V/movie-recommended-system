@@ -298,6 +298,8 @@ public class MoviesController : ControllerBase
 
     }
 
+    //---------------------------------------------------------------------------------
+    //T2
     [Microsoft.AspNetCore.Mvc.HttpGet]
     public List<Tuple<int, int>> GetMovieIdWithRating(int userID)
         {
@@ -310,9 +312,9 @@ public class MoviesController : ControllerBase
         return userRating ;
             }
         }
-    
+   
     [HttpPost("GetRecommendedMoviesForUser")]
-    public ActionResult<List<string>> GetRecommendedMoviesForUser(int userID)
+    public List<string> GetRecommendedMoviesForUser(int userID)
     {    
         
         var userInfo = GetMovieIdWithRating(userID);
@@ -362,5 +364,57 @@ public class MoviesController : ControllerBase
         
         return listOfSimilarUsers.Union(listOfSimilarUsers).ToList();
     } 
+
+    //---------------------------------------------------------------------------------------------------
+    //T3
+
+
+    [HttpPost("ContentBasedRecommendation")]
+    public List<string> ContentBasedRecommendation(int userId,int size,double threshold)
+    {
+
+        var higestRatedMovieByUserId = GetRecommendationsForUserById(userId,size);
+        var MostPopularGenresByUserID = new List<string>(); 
+        foreach(string movie in higestRatedMovieByUserId){
+            MostPopularGenresByUserID.AddRange(GetGenresByMovieIdVector(GetMoviesByName(movie).FirstOrDefault().MovieID));
+        }
+        //MostPopularGenresByUserID = MostPopularGenresByUserID.Union(MostPopularGenresByUserID).ToList();
+        var count = MostPopularGenresByUserID.GroupBy(x => x)
+                           .Select(x => new { Genres = x.Key, Count = x.Count() })
+                           .ToList();
+        var popularGenres = new List<string>(); 
+        foreach (var item in count)
+        {
+            if (item.Count >= (size/2)){
+                popularGenres.Add(item.Genres);
+            }
+        }
+        var rated_movie = GetRatedMoviesByUserId(userId);
+
+
+        var genres1 = popularGenres ;
+        double norm1 = genres1.Count();
+        var similarMovies = new List<string>();
+        MoviesContext dbContext = new MoviesContext();
+        foreach (var movie in dbContext.Movies)
+        {
+            var genres2 = GetGenresByMovieIdVector(movie.MovieID);
+            var commonGenres = genres1.Intersect(genres2);
+            double dotProduct = commonGenres.Count();
+            double norm2 = genres2.Count();
+            double cosineSimilarity = dotProduct / Math.Sqrt(norm1 * norm2);
+            if (cosineSimilarity >= threshold && !rated_movie.Contains(movie.Title))
+            {
+                similarMovies.Add(movie.Title);
+            }
+        }
+
+        similarMovies.AddRange(GetRecommendedMoviesForUser(userId));
+
+        return similarMovies.Union(similarMovies).ToList();
+    }
+
+
+
 }
 
